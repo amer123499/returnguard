@@ -1,0 +1,20 @@
+{
+  "name": "returnguard-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ReturnGuard API — return-fraud risk scoring for Harlow & Co.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "db:setup": "node db/seed.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}

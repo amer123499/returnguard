@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: returnguard
+      POSTGRES_PASSWORD: returnguard
+      POSTGRES_DB: returnguard
+    ports:
+      - "127.0.0.1:5432:5432"   # this computer only, not the network
+    volumes:
+      - returnguard-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U returnguard"]
+      interval: 3s
+      retries: 10
+
+volumes:
+  returnguard-data:

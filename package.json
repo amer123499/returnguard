@@ -1,0 +1,17 @@
+{
+  "name": "returnguard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ReturnGuard — explainable return-fraud risk scoring for Harlow & Co.",
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "db:up": "docker compose up -d db",
+    "db:setup": "npm run db:setup -w server",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "test": "npm test -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
