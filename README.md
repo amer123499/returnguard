@@ -144,5 +144,14 @@ Return reasons: `wrong_size`, `not_as_described`, `changed_mind`, `damaged`, `wr
 ## Before production
 
 - **Authentication.** Reviewers currently type their name, and it is saved in their browser. Put the app behind Harlow's SSO and take the reviewer from the session.
+- **Public demo limitation.** The class-demo deployment uses synthetic data and has no authentication. Anyone who can reach the public app can view its data and submit or decide returns. Do not use real customer data or treat this deployment as production-ready.
 - **Calibration.** The thresholds are sensible starting points. Once a few months of staff decisions exist, compare deny rates for each factor and tune the points. The dashboard's "main reasons" panel helps here.
 - **Policy settings.** The 30-day window and the 15% baseline return rate are constants in `riskScorer.js`. Move them to config if they vary by region or category.
+
+## AWS deployment
+
+The source repository is configured for a source-based Elastic Beanstalk API deployment and Amplify Hosting for the Vite frontend. Neither requires a local Docker build. See `amplify.yml` and `.github/workflows/deploy-backend.yml` for the build and deployment wiring.
+
+Connect Amplify to the `main` branch with monorepo app root `client` and build environment variable `AMPLIFY_MONOREPO_APP_ROOT=client`; set `VITE_API_URL` to the Elastic Beanstalk environment URL. Add an Amplify rewrite from `/<*>` to `/index.html` with status `200` so direct visits to app routes work. The backend environment needs `DATABASE_URL`, `ALLOWED_HOSTS` (the exact Beanstalk hostname), and `CORS_ORIGINS` (the exact Amplify hostname). Apply `server/db/schema.sql` once to the RDS database, then run `npm run db:setup -w server` only if you intentionally want to reset the tables and load the synthetic demo data; that script drops and recreates the tables.
+
+The backend GitHub Actions workflow uses AWS OIDC. Configure repository variables `AWS_DEPLOY_ROLE_ARN`, `AWS_REGION`, `EB_S3_BUCKET`, `EB_APPLICATION_NAME`, and `EB_ENVIRONMENT_NAME`, and grant that IAM role permission to upload deployment bundles and update the named Elastic Beanstalk environment. Connect the repository's `main` branch to Amplify to enable frontend auto-deploys.

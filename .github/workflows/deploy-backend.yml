@@ -1,0 +1,47 @@
+name: Deploy backend to Elastic Beanstalk
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Package backend source
+        run: |
+          cd server
+          zip -r "$RUNNER_TEMP/returnguard-api.zip" . -x 'node_modules/*'
+      - name: Upload source bundle
+        env:
+          EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET }}
+        run: aws s3 cp "$RUNNER_TEMP/returnguard-api.zip" "s3://${EB_S3_BUCKET}/returnguard/${GITHUB_SHA}.zip"
+      - name: Create application version and deploy
+        env:
+          EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET }}
+          EB_APPLICATION_NAME: ${{ vars.EB_APPLICATION_NAME }}
+          EB_ENVIRONMENT_NAME: ${{ vars.EB_ENVIRONMENT_NAME }}
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION_NAME" \
+            --version-label "${GITHUB_SHA}" \
+            --source-bundle S3Bucket="$EB_S3_BUCKET",S3Key="returnguard/${GITHUB_SHA}.zip" \
+            --process
+          aws elasticbeanstalk update-environment \
+            --environment-name "$EB_ENVIRONMENT_NAME" \
+            --version-label "${GITHUB_SHA}"
+          aws elasticbeanstalk wait environment-updated \
+            --environment-names "$EB_ENVIRONMENT_NAME"
